@@ -985,7 +985,8 @@ void TebLocalPlannerROS::customViaPointsCB(const nav_msgs::Path::ConstPtr& via_p
      
 RobotFootprintModelPtr TebLocalPlannerROS::getRobotFootprintFromParamServer(const ros::NodeHandle& nh)
 {
-  std::string model_name; 
+  std::string model_name;
+  // 现在没有人向“footprint_model/type”这个主题发数据，所以进的是这个里
   if (!nh.getParam("footprint_model/type", model_name))
   {
     ROS_INFO("No robot footprint model specified for trajectory optimization. Using point-shaped model.");

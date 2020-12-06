@@ -46,12 +46,22 @@ namespace teb_local_planner
 
 // ============== Implementation ===================
 
-TebOptimalPlanner::TebOptimalPlanner() : cfg_(NULL), obstacles_(NULL), via_points_(NULL), cost_(HUGE_VAL), prefer_rotdir_(RotType::none),
-                                         robot_model_(new PointRobotFootprint()), initialized_(false), optimized_(false)
+TebOptimalPlanner::TebOptimalPlanner() : cfg_(NULL),
+                                         obstacles_(NULL),
+                                         via_points_(NULL),
+                                         cost_(HUGE_VAL),
+                                         prefer_rotdir_(RotType::none),
+                                         robot_model_(new PointRobotFootprint()),
+                                         initialized_(false),
+                                         optimized_(false)
 {    
 }
   
-TebOptimalPlanner::TebOptimalPlanner(const TebConfig& cfg, ObstContainer* obstacles, RobotFootprintModelPtr robot_model, TebVisualizationPtr visual, const ViaPointContainer* via_points)
+TebOptimalPlanner::TebOptimalPlanner(const TebConfig& cfg,
+                                     ObstContainer* obstacles,
+                                     RobotFootprintModelPtr robot_model,
+                                     TebVisualizationPtr visual,
+                                     const ViaPointContainer* via_points)
 {    
   initialize(cfg, obstacles, robot_model, visual, via_points);
 }
@@ -66,7 +76,11 @@ TebOptimalPlanner::~TebOptimalPlanner()
   //g2o::HyperGraphActionLibrary::destroy();
 }
 
-void TebOptimalPlanner::initialize(const TebConfig& cfg, ObstContainer* obstacles, RobotFootprintModelPtr robot_model, TebVisualizationPtr visual, const ViaPointContainer* via_points)
+void TebOptimalPlanner::initialize(const TebConfig& cfg,
+                                   ObstContainer* obstacles,
+                                   RobotFootprintModelPtr robot_model,
+                                   TebVisualizationPtr visual,
+                                   const ViaPointContainer* via_points)
 {    
   // init optimizer (set solver and block ordering settings)
   optimizer_ = initOptimizer();
@@ -175,7 +189,7 @@ bool TebOptimalPlanner::optimizeTEB(int iterations_innerloop, int iterations_out
   
   bool success = false;
   optimized_ = false;
-  
+  // 需要重点看下teb对于动态障碍物是如何处理的
   double weight_multiplier = 1.0;
 
   // TODO(roesmann): we introduced the non-fast mode with the support of dynamic obstacles
@@ -314,7 +328,7 @@ bool TebOptimalPlanner::buildGraph(double weight_multiplier)
     ROS_WARN("Cannot build graph, because it is not empty. Call graphClear()!");
     return false;
   }
-  
+  // 这种加边加节点这种是增量的还是每次重新算的？如果是增量的，那么是谁保存的？optimizer_?
   // add TEB vertices
   AddTEBVertices();
   
@@ -956,7 +970,8 @@ void TebOptimalPlanner::AddEdgesKinematicsCarlike()
   }  
 }
 
-
+// 这个看起来像是更倾向于机器往哪边转的一个函数，
+// 看函数用途说是为了避免震荡用的，测下不开这个的时候(optim.weight_prefer_rotdir==0)机器在什么情况下会出现问题（两边权值相等的时候呗）
 void TebOptimalPlanner::AddEdgesPreferRotDir()
 {
   //TODO(roesmann): Note, these edges can result in odd predictions, in particular

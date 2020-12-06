@@ -82,7 +82,7 @@ int main( int argc, char** argv )
   
   // load ros parameters from node handle
   config.loadRosParamFromNodeHandle(n);
- 
+  // 这里是一直在规划loop中的起点到终点
   ros::Timer cycle_timer = n.createTimer(ros::Duration(0.025), CB_mainCycle);
   ros::Timer publish_timer = n.createTimer(ros::Duration(0.1), CB_publishCycle);
   
@@ -102,18 +102,20 @@ int main( int argc, char** argv )
 
   // interactive marker server for simulated dynamic obstacles
   interactive_markers::InteractiveMarkerServer marker_server("marker_obstacles");
-
+  
+  //这里是定制的障碍物，如果打算在现在的导航中使用的话这个应该就是接障碍物管理的部分
   obst_vector.push_back( boost::make_shared<PointObstacle>(-3,1) );
   obst_vector.push_back( boost::make_shared<PointObstacle>(6,2) );
   obst_vector.push_back( boost::make_shared<PointObstacle>(0,0.1) );
-//  obst_vector.push_back( boost::make_shared<LineObstacle>(1,1.5,1,-1.5) ); //90 deg
-//  obst_vector.push_back( boost::make_shared<LineObstacle>(1,0,-1,0) ); //180 deg
-//  obst_vector.push_back( boost::make_shared<PointObstacle>(-1.5,-0.5) );
+  // obst_vector.push_back( boost::make_shared<LineObstacle>(1,1.5,1,-1.5) ); //90 deg
+  // obst_vector.push_back( boost::make_shared<LineObstacle>(1,0,-1,0) ); //180 deg
+  obst_vector.push_back( boost::make_shared<PointObstacle>(-1.5,-0.5) );
 
   // Dynamic obstacles
-  Eigen::Vector2d vel (0.1, -0.3);
+  // 为啥看起来好像没生效？从使用的地方来看好像只会对预测的计算有用，没看到会让rviz中的障碍物动
+  Eigen::Vector2d vel(1., 0);
   obst_vector.at(0)->setCentroidVelocity(vel);
-  vel = Eigen::Vector2d(-0.3, -0.2);
+  vel = Eigen::Vector2d(0, -2.);
   obst_vector.at(1)->setCentroidVelocity(vel);
 
   /*
@@ -135,6 +137,7 @@ int main( int argc, char** argv )
 
     //CreateInteractiveMarker(obst_vector.at(i)[0],obst_vector.at(i)[1],i,&marker_server, &CB_obstacle_marker);  
     // Add interactive markers for all point obstacles
+    // 生成障碍物可以随意拖动的边框
     boost::shared_ptr<PointObstacle> pobst = boost::dynamic_pointer_cast<PointObstacle>(obst_vector.at(i));
     if (pobst)
     {
@@ -155,7 +158,7 @@ int main( int argc, char** argv )
   else
     planner = PlannerInterfacePtr(new TebOptimalPlanner(config, &obst_vector, robot_model, visual, &via_points));
   
-
+  // no_fixed_obstacles在这里是一个全局变量，存储的是空间中动态障碍物的个数。
   no_fixed_obstacles = obst_vector.size();
   ros::spin();
 
